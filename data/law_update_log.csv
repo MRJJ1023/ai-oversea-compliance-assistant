@@ -1,0 +1,6 @@
+﻿update_id,jurisdiction,law_name,source_url,detected_date,change_type,change_summary,impact_level,affected_scenarios,suggested_review_action,status
+U001,ASEAN区域,Expanded ASEAN Guide on AI Governance and Ethics - Generative AI,https://asean.org/wp-content/uploads/2025/01/Expanded-ASEAN-Guide-on-AI-Governance-and-Ethics-Generative-AI.pdf,2025-01-15,新增指南,ASEAN新增生成式AI治理扩展指南，补充生成式AI相关政策考虑。,中高,生成式AI;AI Agent;内容安全;第三方模型调用,更新东南亚生成式AI风险规则和客户材料库。,已纳入v01
+U002,巴西,Projeto de Lei n° 2338/2023,https://www25.senado.leg.br/web/atividade/materias/-/materia/157233,2024-12-10,立法状态变化,巴西AI法案在参议院获批并进入后续立法流程，需持续关注是否成为正式法律。,中高,巴西AI业务;高风险AI;金融科技,将巴西AI法案状态标记为立法中，后续监控议案页面。,待持续复核
+U003,韩国,AI Basic Act / Framework Act on AI,https://www.msit.go.kr/eng/bbs/view.do?bbsSeqNo=42&mId=4&mPid=2&nttSeqNo=1071,2025-2026,实施准备,韩国AI基础法相关实施和细则需要持续关注。,中高,韩国客户;高影响AI;生成内容披露,跟踪MSIT公告和实施细则，补充高影响AI规则。,待持续复核
+U004,越南,Decree No. 13/2023/ND-CP on Personal Data Protection,https://vanban.chinhphu.vn/?docid=207759&pageid=27160,2026-06-21,基线检查,v01中先以Decree 13作为官方数据保护来源，后续需关注PDPL及替代/细则。,高,越南个人数据;跨境传输;DPA,v02监控越南政府法令库和后续个人数据保护法更新。,待自动监控
+U005,欧盟,Regulation (EU) 2024/1689 - Artificial Intelligence Act,https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng,2026-06-21,基线检查,v01确认EU AI Act官方原文链接并设为高优先级监控对象。,高,欧盟AI服务;高风险AI;通用目的AI,v02优先使用EUR-Lex API/网页hash检查。,待自动监控
