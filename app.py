@@ -77,6 +77,10 @@ law_df = load_csv("law_source_registry.csv")
 risk_df = load_csv("risk_rule_library.csv")
 case_df = load_csv("case_warning_library.csv")
 update_df = load_csv("law_update_log.csv")
+try:
+    snapshot_df = load_csv("law_monitor_snapshot.csv")
+except Exception:
+    snapshot_df = pd.DataFrame()
 
 
 def unique_sorted(series: pd.Series, include_all: bool = False) -> List[str]:
@@ -219,7 +223,7 @@ with st.sidebar:
     keyword_sel = st.text_input("关键词搜索", placeholder="如：模型训练、DPA、跨境、日志、未成年人")
     st.divider()
     st.markdown("### 📌 使用说明")
-    st.caption("v01 用于法规检索、风险预警和材料准备；v02 将接入 GitHub Actions 自动监控官方链接更新。")
+    st.caption("v02 用于法规检索、风险预警和材料准备，并接入 GitHub Actions 定时监控官方来源疑似更新。")
 
 matched_rules = filter_risk_rules(
     risk_df,
@@ -237,7 +241,7 @@ st.markdown(
       <div class="hero-title">AI 出海合规管理与法案预警助手</div>
       <div class="hero-sub">
       面向 AI 出海业务、经营分析、销售、法务和产品团队的轻量合规工作台：
-      快速定位官方法规/指南原文，识别目标市场风险点，沉淀客户合规响应材料，并为后续法规更新自动监控预留接口。
+      快速定位官方法规/指南原文，识别目标市场风险点，沉淀客户合规响应材料，并并接入后台定时监控官方来源疑似更新。
       </div>
     </div>
     """,
@@ -271,7 +275,7 @@ card_contents = [
     ("法规原文检索", "先找到官方来源，再做业务解读，避免只凭二手材料判断合规义务。"),
     ("目标市场预警", "把地区、行业、产品、部署和数据活动映射到风险规则，提前识别客户落地风险。"),
     ("标准材料沉淀", "围绕训练数据、日志留存、DPA、第三方模型和数据跨境沉淀销售/法务/产品协同材料。"),
-    ("更新监控接口", "v01 展示更新台账；v02 接入 GitHub Actions 定时检查官方来源页面。"),
+    ("更新监控接口", "v02 接入 GitHub Actions 定时检查官方来源页面，并将疑似更新写入台账。"),
 ]
 for col, (title, body) in zip(cards, card_contents):
     with col:
@@ -393,7 +397,25 @@ with tab3:
 
 with tab4:
     st.markdown("<div class='section-title'>法规更新台账</div>", unsafe_allow_html=True)
-    st.markdown("<div class='section-desc'>v01 展示法规更新台账；v02 将通过 GitHub Actions 定时检查官方来源页面，并自动写入疑似更新记录。</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-desc'>v02 已接入 GitHub Actions 自动监控框架：定时检查官方来源页面，通过 Last-Modified、ETag 或正文 hash 判断疑似更新，并写入更新台账。</div>", unsafe_allow_html=True)
+    if not snapshot_df.empty:
+        s1, s2, s3, s4 = st.columns(4)
+        with s1:
+            st.metric("监控来源数", f"{len(snapshot_df)}")
+        with s2:
+            changed_count = (snapshot_df.get("change_detected", pd.Series(dtype=str)).astype(str) == "是").sum()
+            st.metric("本轮疑似变化", f"{changed_count}")
+        with s3:
+            error_count = snapshot_df.get("fetch_error", pd.Series(dtype=str)).astype(str).str.strip().ne("").sum()
+            st.metric("访问异常", f"{error_count}")
+        with s4:
+            latest_check = snapshot_df.get("checked_at", pd.Series([""])).astype(str).replace("", np.nan).dropna()
+            st.metric("最近自动检查", latest_check.iloc[0] if len(latest_check) else "未运行")
+        with st.expander("查看法规来源监控快照", expanded=False):
+            snapshot_cols = [c for c in ["jurisdiction", "law_name", "official_url", "checked_at", "http_status", "last_modified", "etag", "change_detected", "change_fields", "fetch_error"] if c in snapshot_df.columns]
+            st.dataframe(snapshot_df[snapshot_cols], use_container_width=True, height=300, column_config={"official_url": st.column_config.LinkColumn("官方链接")})
+    else:
+        st.info("尚未生成 law_monitor_snapshot.csv。部署到 GitHub 后，可在 Actions 中手动运行一次 Check law source updates 建立监控基线。")
     u1, u2 = st.columns([1, 2])
     with u1:
         impact_count = update_df.groupby("impact_level", as_index=False).size().rename(columns={"size": "count"})
@@ -455,7 +477,7 @@ st.markdown(
     """
     <div class="small-muted">
     <b>边界说明：</b>本工具用于合规信息检索、风险提示和业务前置准备，不构成正式法律意见；具体客户项目落地仍需由法务或外部律师复核。
-    v01 的法规更新模块为台账展示；v02 将接入 GitHub Actions 定时监控官方来源更新。
+    v02 已加入 GitHub Actions 定时监控框架；监控结果仅作为疑似更新提示，具体法律变化仍需人工复核。
     </div>
     """,
     unsafe_allow_html=True,
