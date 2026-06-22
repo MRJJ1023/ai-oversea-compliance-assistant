@@ -57,7 +57,11 @@ CUSTOM_CSS = """
     .small-muted {font-size: .88rem; color: #64748b; line-height: 1.55;}
     .section-title {font-size: 1.3rem; font-weight: 750; color: #0f172a; margin: 1.2rem 0 .25rem 0;}
     .section-desc {color:#64748b; font-size:.95rem; line-height:1.6; margin-bottom:.7rem;}
-    .stMetric {background: white; border-radius: 16px; padding: .8rem; border:1px solid #e2e8f0; box-shadow: 0 8px 18px rgba(15,23,42,.05);}
+    .stMetric {background: white; border-radius: 16px; padding: .8rem; border:1px solid #e2e8f0; box-shadow: 0 8px 18px rgba(15,23,42,.05);} 
+    .compact-metric {background: white; border-radius: 16px; padding: .85rem 1rem; border:1px solid #e2e8f0; box-shadow: 0 8px 18px rgba(15,23,42,.05); min-height: 112px;}
+    .compact-metric .metric-label {font-size: .95rem; color:#0f172a; margin-bottom:.55rem;}
+    .compact-metric .metric-value {font-size: 1.55rem; line-height: 1.18; font-weight: 650; color:#0f172a; word-break: keep-all; white-space: normal;}
+    .compact-metric .metric-hint {font-size: .78rem; color:#64748b; margin-top:.35rem;}
     div[data-baseweb="tag"] {background-color: #dbeafe !important; color:#1d4ed8 !important;}
     footer {visibility: hidden;}
 </style>
@@ -102,6 +106,19 @@ def search_df(df: pd.DataFrame, query: str, cols: List[str]) -> pd.DataFrame:
         if col in df.columns:
             mask |= df[col].astype(str).str.lower().str.contains(re.escape(q), na=False)
     return df[mask]
+
+
+def format_check_time(value: str) -> str:
+    """Format checked_at to minute-level display; keep UTC label when present."""
+    raw = str(value or "").strip()
+    if not raw or raw.lower() == "nan":
+        return "未运行"
+    cleaned = raw.replace("UTC", "").strip()
+    dt = pd.to_datetime(cleaned, errors="coerce", utc=False)
+    if pd.isna(dt):
+        return raw
+    suffix = " UTC" if "UTC" in raw.upper() else ""
+    return dt.strftime("%Y-%m-%d %H:%M") + suffix
 
 
 def level_rank(level: str) -> int:
@@ -410,7 +427,17 @@ with tab4:
             st.metric("访问异常", f"{error_count}")
         with s4:
             latest_check = snapshot_df.get("checked_at", pd.Series([""])).astype(str).replace("", np.nan).dropna()
-            st.metric("最近自动检查", latest_check.iloc[0] if len(latest_check) else "未运行")
+            latest_check_text = format_check_time(latest_check.iloc[0]) if len(latest_check) else "未运行"
+            st.markdown(
+                f"""
+                <div class="compact-metric">
+                    <div class="metric-label">最近自动检查</div>
+                    <div class="metric-value">{latest_check_text}</div>
+                    <div class="metric-hint">按监控快照 checked_at 字段展示</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         with st.expander("查看法规来源监控快照", expanded=False):
             snapshot_cols = [c for c in ["jurisdiction", "law_name", "official_url", "checked_at", "http_status", "last_modified", "etag", "change_detected", "change_fields", "fetch_error"] if c in snapshot_df.columns]
             st.dataframe(snapshot_df[snapshot_cols], use_container_width=True, height=300, column_config={"official_url": st.column_config.LinkColumn("官方链接")})
